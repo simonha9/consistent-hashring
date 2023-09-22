@@ -59,38 +59,75 @@ func (cr *ConsistentHashRing) AddKey(key string) {
 }
 
 func (cr *ConsistentHashRing) findClosestServer(hash uint32) *Node {
-	// find the closest server to the hash
+	// find the closest server to the hash, this has to be left biased
 	// use binary search to find the closest server (leetcode)
 
 	low := 0
 	high := len(cr.Nodes) - 1
 	for low < high {
 		mid := (low + high) / 2
-		if cr.Nodes[mid].hashedKey == hash {
-			return cr.Nodes[hash]
-		} else if cr.Nodes[mid].hashedKey < hash {
+		if cr.Nodes[mid].hashedKey < hash {
 			low = mid + 1
 		} else {
-			high = mid - 1
+			high = mid
 		}
 	}
 	return cr.Nodes[low]
 }
 
-// Now to support multiple adding and removing / redistribution of keys
+func (cr *ConsistentHashRing) findNextLargestKey(hash uint32) Key {
+	// This is a right biased binsearch
 
-func (cr *ConsistentHashRing) AddNode(node *Node) {
-	// add the node to the hash ring
-	// redistribute the keys
-
-	// find all the keys between this node and the next node to redistribute them, by
-	// finding all the keys < newly added node
-	// that is, find the largest key such that k < newly added node
-	// and every key between k and j where j is the smallest key > previous node inclusive
-
+	low := 0
+	high := len(cr.Keys) - 1
+	for low < high {
+		mid := (low + high) / 2
+		if hash < cr.Keys[mid].hashedKey {
+			high = mid - 1
+		} else {
+			low = mid
+		}
+	}
+	return *cr.Keys[low]
 }
 
-func (cr *ConsistentHashRing) RemoveNode(node *Node) {
+// Now to support multiple adding and removing / redistribution of keys
+
+func (cr *ConsistentHashRing) AddServer(node *Node) {
+	// Add a server to the hashring, need a redistribution of keys
+	// Find the hash server value, use bin search to find placement of new server
+	// but take a note of the left and right, we will need a redistribution of keys between
+	// newnode-1 and curnode so that curnode will take all those keys
+	// we don't need to touch any of the nodes on the right side because they are already in the right place
+
+	// but we actually do this by finding the smallest key > cur node, then all keys in newnode-1 server
+	// with values < target will get redistributed
+
+	leftSibling := cr.findClosestServer(node.hashedKey)
+	nextLargestKey := cr.findNextLargestKey(node.hashedKey)
+
+	remove := []Key{}
+	keep := []Key{}
+
+	for _, key := range leftSibling.contents {
+		if key.hashedKey < nextLargestKey.hashedKey {
+			remove = append(remove, key)
+		} else {
+			keep = append(keep, key)
+		}
+	}
+
+	copy(leftSibling.contents, keep)
+	copy(node.contents, remove)
+	cr.addServerAndGrow(node)
+}
+
+func (cr *ConsistentHashRing) addServerAndGrow(node *Node) {
+	// TODO: implement lazy doubling
+	cr.Nodes = append(cr.Nodes, node)
+}
+
+func (cr *ConsistentHashRing) RemoveServer(node *Node) {
 	// remove the node from the hash ring
 	// redistribute the keys
 
