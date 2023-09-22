@@ -2,17 +2,22 @@ package pkg
 
 import "fmt"
 
+// Consistent hash ring has keys and servers, you hash the node
+// then store keys on the servers.
+// the server that a key belongs to is, hash the key then go clockwise to find
+// the closest server and that server holds the key
+
 // ConsistentHashRing is a struct that holds the state of the consistent hash ring
 type ConsistentHashRing struct {
 	hashFunction func(string) uint32
-	Nodes        map[uint32]*Node // map of hashed keys to nodes
+	Nodes        []*Node
 	Keys         []*Key
 }
 
 type Node struct {
-	key       string   // Key of the node
-	hashedKey uint32   // hashed key to identify which Key it belongs to
-	contents  []string // these are servers so we need to hold information
+	key       string // Key of the node
+	hashedKey uint32 // hashed key to identify which key it belongs to
+	contents  []Key  // these are servers so we need to hold information
 }
 
 type Key struct {
@@ -24,7 +29,7 @@ type Key struct {
 func NewConsistentHashRing(hash func(string) uint32, keys []uint32) *ConsistentHashRing {
 	cr := &ConsistentHashRing{
 		hashFunction: hash,
-		Nodes:        make(map[uint32]*Node),
+		Nodes:        make([]*Node, 0),
 	}
 	// quicksort keys
 	quickSort(keys, 0, len(keys)-1)
@@ -41,11 +46,16 @@ func NewConsistentHashRing(hash func(string) uint32, keys []uint32) *ConsistentH
 }
 
 // AddNode adds a node to the consistent hash ring
-func (cr *ConsistentHashRing) AddValue(value string) {
-	h := cr.hashFunction(value)
+func (cr *ConsistentHashRing) AddKey(key string) {
+	h := cr.hashFunction(key)
+	k := Key{
+		key:       key,
+		hashedKey: h,
+	}
+
 	// find the server that is closest to the value
 	server := cr.findClosestServer(h)
-	server.contents = append(server.contents, value)
+	server.contents = append(server.contents, k)
 }
 
 func (cr *ConsistentHashRing) findClosestServer(hash uint32) *Node {
@@ -53,16 +63,41 @@ func (cr *ConsistentHashRing) findClosestServer(hash uint32) *Node {
 	// use binary search to find the closest server (leetcode)
 
 	low := 0
-	high := len(cr.Keys) - 1
+	high := len(cr.Nodes) - 1
 	for low < high {
 		mid := (low + high) / 2
-		if cr.Keys[mid].hashedKey == hash {
+		if cr.Nodes[mid].hashedKey == hash {
 			return cr.Nodes[hash]
-		} else if cr.Keys[mid].hashedKey < hash {
+		} else if cr.Nodes[mid].hashedKey < hash {
 			low = mid + 1
 		} else {
 			high = mid - 1
 		}
 	}
-	return cr.Nodes[cr.Keys[low].hashedKey]
+	return cr.Nodes[low]
 }
+
+// Now to support multiple adding and removing / redistribution of keys
+
+func (cr *ConsistentHashRing) AddNode(node *Node) {
+	// add the node to the hash ring
+	// redistribute the keys
+
+	// find all the keys between this node and the next node to redistribute them, by
+	// finding all the keys < newly added node
+	// that is, find the largest key such that k < newly added node
+	// and every key between k and j where j is the smallest key > previous node inclusive
+
+}
+
+func (cr *ConsistentHashRing) RemoveNode(node *Node) {
+	// remove the node from the hash ring
+	// redistribute the keys
+
+	// find all the keys between this node and
+}
+
+/*
+* But theres not guarantee that the keys are evenly distributed
+* So we need to add virtual nodes to the hash ring, TODO: implement virtual nodes
+ */
