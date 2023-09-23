@@ -14,17 +14,6 @@ type ConsistentHashRing struct {
 	Keys         []*Key
 }
 
-type Node struct {
-	key       string // Key of the node
-	hashedKey uint32 // hashed key to identify which key it belongs to
-	contents  []Key  // these are servers so we need to hold information
-}
-
-type Key struct {
-	key       string // Key of the node
-	hashedKey uint32 // hashed key on the hashring
-}
-
 // NewConsistentHashRing creates a new ConsistentHashRing
 func NewConsistentHashRing(hash func(string) uint32, keys []uint32) *ConsistentHashRing {
 	cr := &ConsistentHashRing{
@@ -123,7 +112,7 @@ func (cr *ConsistentHashRing) AddServer(node *Node) {
 }
 
 func (cr *ConsistentHashRing) addServerAndGrow(node *Node) {
-	// TODO: implement lazy doubling
+	// TODO: needs to be perma sorted so a BST is better
 	cr.Nodes = append(cr.Nodes, node)
 }
 
