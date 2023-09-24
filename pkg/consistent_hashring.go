@@ -10,7 +10,7 @@ import "fmt"
 // ConsistentHashRing is a struct that holds the state of the consistent hash ring
 type ConsistentHashRing struct {
 	hashFunction func(string) uint32
-	Nodes        []*Node
+	Nodes        BSTNode
 	Keys         []*Key
 }
 
@@ -18,10 +18,11 @@ type ConsistentHashRing struct {
 func NewConsistentHashRing(hash func(string) uint32, keys []uint32) *ConsistentHashRing {
 	cr := &ConsistentHashRing{
 		hashFunction: hash,
-		Nodes:        make([]*Node, 0),
+		Nodes:        NewBSTNode(&Node{"", 0, nil}),
 	}
 	// quicksort keys
 	quickSort(keys, 0, len(keys)-1)
+	cr.Keys = make([]*Key, len(keys))
 
 	for _, key := range keys {
 		h := hash(fmt.Sprintf("%d", key))
@@ -29,7 +30,12 @@ func NewConsistentHashRing(hash func(string) uint32, keys []uint32) *ConsistentH
 			key:       fmt.Sprintf("%d", key),
 			hashedKey: h,
 		}
-		cr.Keys[key] = k
+		cr.Nodes.Insert(&Node{
+			key:       fmt.Sprintf("%d", key),
+			hashedKey: h,
+			contents:  []Key{*k},
+		})
+		cr.Keys = append(cr.Keys, k)
 	}
 	return cr
 }
@@ -48,20 +54,15 @@ func (cr *ConsistentHashRing) AddKey(key string) {
 }
 
 func (cr *ConsistentHashRing) findClosestServer(hash uint32) *Node {
-	// find the closest server to the hash, this has to be left biased
-	// use binary search to find the closest server (leetcode)
+	// left biased binsearch but just search through bstnode interface
+	// find the node that is closest to the hash value
 
-	low := 0
-	high := len(cr.Nodes) - 1
-	for low < high {
-		mid := (low + high) / 2
-		if cr.Nodes[mid].hashedKey < hash {
-			low = mid + 1
-		} else {
-			high = mid
-		}
+	// find the node
+	node := cr.Nodes.Search(hash)
+	if node == nil {
+		return nil
 	}
-	return cr.Nodes[low]
+	return node.Node
 }
 
 func (cr *ConsistentHashRing) findNextLargestKey(hash uint32) Key {
@@ -113,7 +114,7 @@ func (cr *ConsistentHashRing) AddServer(node *Node) {
 
 func (cr *ConsistentHashRing) addServerAndGrow(node *Node) {
 	// TODO: needs to be perma sorted so a BST is better
-	cr.Nodes = append(cr.Nodes, node)
+	cr.Nodes.Insert(node)
 }
 
 func (cr *ConsistentHashRing) RemoveServer(node *Node) {
