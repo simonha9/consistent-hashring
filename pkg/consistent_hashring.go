@@ -10,7 +10,7 @@ import "fmt"
 // ConsistentHashRing is a struct that holds the state of the consistent hash ring
 type ConsistentHashRing struct {
 	hashFunction func(string) uint32
-	Nodes        BSTNode
+	Nodes        *BSTNode
 	Keys         []*Key
 }
 

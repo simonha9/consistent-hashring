@@ -8,8 +8,8 @@ type BSTNode struct {
 }
 
 // NewBSTNode creates a new BSTNode
-func NewBSTNode(node *Node) BSTNode {
-	return BSTNode{
+func NewBSTNode(node *Node) *BSTNode {
+	return &BSTNode{
 		Node:  node,
 		Left:  nil,
 		Right: nil,
