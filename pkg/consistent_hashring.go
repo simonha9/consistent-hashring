@@ -11,7 +11,7 @@ import "fmt"
 type ConsistentHashRing struct {
 	hashFunction func(string) uint32
 	Nodes        *BSTNode
-	Keys         []*Key
+	Keys         *BSTNode
 }
 
 // NewConsistentHashRing creates a new ConsistentHashRing
@@ -21,21 +21,26 @@ func NewConsistentHashRing(hash func(string) uint32, keys []uint32) *ConsistentH
 		Nodes:        NewBSTNode(&Node{"", 0, nil}),
 	}
 	// quicksort keys
-	quickSort(keys, 0, len(keys)-1)
-	cr.Keys = make([]*Key, len(keys))
+	cr.Keys = NewBSTNode(&Node{"", 0, nil})
+
+	nodes := []*Node{}
+	bKeys := []*Key{}
 
 	for _, key := range keys {
 		h := hash(fmt.Sprintf("%d", key))
+
 		k := &Key{
 			key:       fmt.Sprintf("%d", key),
 			hashedKey: h,
 		}
-		cr.Nodes.Insert(&Node{
+		n := &Node{
 			key:       fmt.Sprintf("%d", key),
 			hashedKey: h,
 			contents:  []Key{*k},
-		})
-		cr.Keys = append(cr.Keys, k)
+		}
+
+		nodes = append(nodes, n)
+		bKeys = append(bKeys, k)
 	}
 	return cr
 }
@@ -49,36 +54,19 @@ func (cr *ConsistentHashRing) AddKey(key string) {
 	}
 
 	// find the server that is closest to the value
-	server := cr.findClosestServer(h)
+	server := cr.findNode(h, true)
 	server.contents = append(server.contents, k)
 }
 
-func (cr *ConsistentHashRing) findClosestServer(hash uint32) *Node {
+func (cr *ConsistentHashRing) findNode(hash uint32, left bool) *Node {
 	// left biased binsearch but just search through bstnode interface
 	// find the node that is closest to the hash value
 
 	// find the node
-	node := cr.Nodes.Search(hash)
-	if node == nil {
-		return nil
+	if left {
+		return cr.Nodes.SearchLeftBiased(hash)
 	}
-	return node.Node
-}
-
-func (cr *ConsistentHashRing) findNextLargestKey(hash uint32) Key {
-	// This is a right biased binsearch
-
-	low := 0
-	high := len(cr.Keys) - 1
-	for low < high {
-		mid := (low + high) / 2
-		if hash < cr.Keys[mid].hashedKey {
-			high = mid - 1
-		} else {
-			low = mid
-		}
-	}
-	return *cr.Keys[low]
+	return cr.Nodes.SearchRightBiased(hash)
 }
 
 // Now to support multiple adding and removing / redistribution of keys
@@ -93,8 +81,8 @@ func (cr *ConsistentHashRing) AddServer(node *Node) {
 	// but we actually do this by finding the smallest key > cur node, then all keys in newnode-1 server
 	// with values < target will get redistributed
 
-	leftSibling := cr.findClosestServer(node.hashedKey)
-	nextLargestKey := cr.findNextLargestKey(node.hashedKey)
+	leftSibling := cr.findNode(node.hashedKey, true)
+	nextLargestKey := cr.findNode(node.hashedKey, false)
 
 	remove := []Key{}
 	keep := []Key{}

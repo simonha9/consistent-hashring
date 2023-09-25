@@ -47,6 +47,40 @@ func (bst *BSTNode) Search(hash uint32) *BSTNode {
 	return bst.Right.Search(hash)
 }
 
+// could be a weird edge case where we are searching for a hash that is too small, if
+// too small then we should just return nil probably
+func (bst *BSTNode) SearchLeftBiased(hash uint32) *Node {
+	closest := bst.Node
+	for bst != nil {
+		if hash == bst.Node.hashedKey {
+			return bst.Node
+		}
+		if hash < bst.Node.hashedKey {
+			bst = bst.Left
+		} else {
+			closest = bst.Node
+			bst = bst.Right
+		}
+	}
+	return closest
+}
+
+func (bst *BSTNode) SearchRightBiased(hash uint32) *Node {
+	closest := bst.Node
+	for bst != nil {
+		if hash == bst.Node.hashedKey {
+			return bst.Node
+		}
+		if hash < bst.Node.hashedKey {
+			closest = bst.Node
+			bst = bst.Left
+		} else {
+			bst = bst.Right
+		}
+	}
+	return closest
+}
+
 // Delete deletes a node from the BST
 func (bst *BSTNode) Delete(hash uint32) *Node {
 	// Delete looks for the node and finds successor to replace it
@@ -124,4 +158,19 @@ func (bst BSTNode) findSuccessor(node *BSTNode) *BSTNode {
 		parent.Right = nil
 	}
 	return node
+}
+
+func (bst BSTNode) qsortAndBuild(nodes []Node) {
+	quickSort(nodes, 0, len(nodes)-1)
+	bst.build(nodes)
+}
+
+func (bst BSTNode) build(nodes []Node) {
+	if nodes == nil || len(nodes) == 0 {
+		return
+	}
+	mid := len(nodes) / 2
+	bst.Insert(&nodes[mid])
+	bst.build(nodes[:mid])
+	bst.build(nodes[mid+1:])
 }

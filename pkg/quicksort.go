@@ -1,8 +1,8 @@
 package pkg
 
-func quickSort(arr []uint32, low int, high int) {
+func quickSort(arr []Node, low int, high int) {
 	if low < high {
-		pi := partion(arr, low, high)
+		pi := partition(arr, low, high)
 
 		// Recursively sort elements before partition and after partition
 		quickSort(arr, low, pi-1)
@@ -10,12 +10,12 @@ func quickSort(arr []uint32, low int, high int) {
 	}
 }
 
-func partion(arr []uint32, low int, high int) int {
+func partition(arr []Node, low int, high int) int {
 	pivot := arr[high]
 	i := low - 1
 
 	for j := low; j < high; j++ {
-		if arr[j] < pivot {
+		if arr[j].hashedKey < pivot.hashedKey {
 			i++
 
 			arr[i], arr[j] = arr[j], arr[i]
