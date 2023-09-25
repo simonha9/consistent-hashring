@@ -53,20 +53,20 @@ func (cr *ConsistentHashRing) AddKey(key string) {
 		hashedKey: h,
 	}
 
-	// find the server that is closest to the value
-	server := cr.findNode(h, true)
+	// find the server that is closest to the value should be right biased
+	server := cr.findNode(h, false, false)
 	server.contents = append(server.contents, k)
 }
 
-func (cr *ConsistentHashRing) findNode(hash uint32, left bool) *Node {
+func (cr *ConsistentHashRing) findNode(hash uint32, left bool, exact bool) *Node {
 	// left biased binsearch but just search through bstnode interface
 	// find the node that is closest to the hash value
 
 	// find the node
 	if left {
-		return cr.Nodes.SearchLeftBiased(hash)
+		return cr.Nodes.SearchLeftBiased(hash, exact)
 	}
-	return cr.Nodes.SearchRightBiased(hash)
+	return cr.Nodes.SearchRightBiased(hash, exact)
 }
 
 // Now to support multiple adding and removing / redistribution of keys
@@ -81,8 +81,8 @@ func (cr *ConsistentHashRing) AddServer(node *Node) {
 	// but we actually do this by finding the smallest key > cur node, then all keys in newnode-1 server
 	// with values < target will get redistributed
 
-	leftSibling := cr.findNode(node.hashedKey, true)
-	nextLargestKey := cr.findNode(node.hashedKey, false)
+	leftSibling := cr.findNode(node.hashedKey, true, false)
+	nextLargestKey := cr.findNode(node.hashedKey, false, false)
 
 	remove := []Key{}
 	keep := []Key{}
@@ -97,11 +97,10 @@ func (cr *ConsistentHashRing) AddServer(node *Node) {
 
 	copy(leftSibling.contents, keep)
 	copy(node.contents, remove)
-	cr.addServerAndGrow(node)
+	cr.addServer(node)
 }
 
-func (cr *ConsistentHashRing) addServerAndGrow(node *Node) {
-	// TODO: needs to be perma sorted so a BST is better
+func (cr *ConsistentHashRing) addServer(node *Node) {
 	cr.Nodes.Insert(node)
 }
 
@@ -109,7 +108,12 @@ func (cr *ConsistentHashRing) RemoveServer(node *Node) {
 	// remove the node from the hash ring
 	// redistribute the keys
 
-	// find all the keys between this node and
+	// find all the keys between this node and last one
+	// all the keys here need to be redistributed to the next sibling
+
+	rightSibling := cr.findNode(node.hashedKey, false, false)
+	copy(rightSibling.contents, append(rightSibling.contents, node.contents...))
+	cr.Nodes.Delete(node.hashedKey)
 }
 
 /*

@@ -49,10 +49,10 @@ func (bst *BSTNode) Search(hash uint32) *BSTNode {
 
 // could be a weird edge case where we are searching for a hash that is too small, if
 // too small then we should just return nil probably
-func (bst *BSTNode) SearchLeftBiased(hash uint32) *Node {
+func (bst *BSTNode) SearchLeftBiased(hash uint32, exact bool) *Node {
 	closest := bst.Node
 	for bst != nil {
-		if hash == bst.Node.hashedKey {
+		if exact && hash == bst.Node.hashedKey {
 			return bst.Node
 		}
 		if hash < bst.Node.hashedKey {
@@ -65,10 +65,10 @@ func (bst *BSTNode) SearchLeftBiased(hash uint32) *Node {
 	return closest
 }
 
-func (bst *BSTNode) SearchRightBiased(hash uint32) *Node {
+func (bst *BSTNode) SearchRightBiased(hash uint32, exact bool) *Node {
 	closest := bst.Node
 	for bst != nil {
-		if hash == bst.Node.hashedKey {
+		if exact && hash == bst.Node.hashedKey {
 			return bst.Node
 		}
 		if hash < bst.Node.hashedKey {
