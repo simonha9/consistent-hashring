@@ -18,10 +18,10 @@ type ConsistentHashRing struct {
 func NewConsistentHashRing(hash func(string) uint32, keys []uint32) *ConsistentHashRing {
 	cr := &ConsistentHashRing{
 		hashFunction: hash,
-		Nodes:        NewBSTNode(&Node{"", 0, nil}),
+		Nodes:        NewBSTNode(&Node{"", 0, nil, Server{"serverroot"}}),
 	}
 	// quicksort keys
-	cr.Keys = NewBSTNode(&Node{"", 0, nil})
+	cr.Keys = NewBSTNode(&Node{"", 0, nil, Server{"keyroot"}})
 
 	nodes := []*Node{}
 	bKeys := []*Key{}
@@ -117,6 +117,21 @@ func (cr *ConsistentHashRing) RemoveServer(node *Node) {
 }
 
 /*
-* But theres not guarantee that the keys are evenly distributed
-* So we need to add virtual nodes to the hash ring, TODO: implement virtual nodes
- */
+But theres no guarantee that the keys are evenly distributed
+So we need to add virtual nodes to the hash ring, TODO: implement virtual nodes
+
+But this is not a change in BST structure its just a change in number of server keys
+I guess rather a node will have multiple servers and each server will hold keys but how
+do we actually do this
+
+so BSTNode will have a list of Nodes of the same server, or we can hide it in the "node" struct
+with a list of servers, but this might not be the best because we need to find what server a key belongs to
+since they will be in different places in the ring
+
+so each virtualnode is a node, and each node will belong to a server
+so then we don't really care the servers but rather they are all just different
+
+Then maybe we have a Server struct that holds a list of nodes in case we need to do any checks like
+how many there are etc etc
+
+*/
