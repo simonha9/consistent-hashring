@@ -34,7 +34,7 @@ func (bst *BSTNode) Insert(node *Node) {
 }
 
 // Search searches for a node in the BST
-func (bst *BSTNode) Search(hash uint32) *BSTNode {
+func (bst *BSTNode) Search(hash uint64) *BSTNode {
 	if bst == nil {
 		return nil
 	}
@@ -49,7 +49,7 @@ func (bst *BSTNode) Search(hash uint32) *BSTNode {
 
 // could be a weird edge case where we are searching for a hash that is too small, if
 // too small then we should just return nil probably
-func (bst *BSTNode) SearchLeftBiased(hash uint32, exact bool) *Node {
+func (bst *BSTNode) SearchLeftBiased(hash uint64, exact bool) *Node {
 	closest := bst.Node
 	for bst != nil {
 		if exact && hash == bst.Node.hashedKey {
@@ -65,7 +65,7 @@ func (bst *BSTNode) SearchLeftBiased(hash uint32, exact bool) *Node {
 	return closest
 }
 
-func (bst *BSTNode) SearchRightBiased(hash uint32, exact bool) *Node {
+func (bst *BSTNode) SearchRightBiased(hash uint64, exact bool) *Node {
 	closest := bst.Node
 	for bst != nil {
 		if exact && hash == bst.Node.hashedKey {
@@ -82,7 +82,7 @@ func (bst *BSTNode) SearchRightBiased(hash uint32, exact bool) *Node {
 }
 
 // Delete deletes a node from the BST
-func (bst *BSTNode) Delete(hash uint32) *Node {
+func (bst *BSTNode) Delete(hash uint64) *Node {
 	// Delete looks for the node and finds successor to replace it
 
 	// find the node

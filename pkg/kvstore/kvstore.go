@@ -1,7 +1,6 @@
 package kvstore
 
 import (
-	"crypto/sha256"
 
 	"github.com/simonha9/consistent-hashring/pkg"
 )
@@ -15,8 +14,8 @@ type KVStore struct {
 
 // NewKVStore creates a new KVStore, this needs to be uint32 not byte
 func NewKVStore() *KVStore {
-	hash := sha256.New224().Sum32()
+	
 	return &KVStore{
-		HashRing: pkg.NewConsistentHashRing(sha256.New(), []uint32{}),
+		HashRing: pkg.NewConsistentHashRing(, []uint32{}),
 	}
 }

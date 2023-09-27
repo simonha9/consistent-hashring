@@ -12,13 +12,13 @@ import (
 
 // ConsistentHashRing is a struct that holds the state of the consistent hash ring
 type ConsistentHashRing struct {
-	hashFunction hash.Hash32
+	hashFunction hash.Hash64
 	Nodes        *BSTNode
 	Keys         *BSTNode
 }
 
 // NewConsistentHashRing creates a new ConsistentHashRing
-func NewConsistentHashRing(hash hash.Hash32, keys []uint32) *ConsistentHashRing {
+func NewConsistentHashRing(hash hash.Hash64, keys []uint32) *ConsistentHashRing {
 	hash.Reset()
 	cr := &ConsistentHashRing{
 		hashFunction: hash,
@@ -32,7 +32,7 @@ func NewConsistentHashRing(hash hash.Hash32, keys []uint32) *ConsistentHashRing 
 
 	for _, key := range keys {
 		hash.Write([]byte(fmt.Sprintf("%d", key)))
-		h := hash.Sum32()
+		h := hash.Sum64()
 
 		k := &Key{
 			key:       fmt.Sprintf("%d", key),
@@ -54,7 +54,7 @@ func NewConsistentHashRing(hash hash.Hash32, keys []uint32) *ConsistentHashRing 
 func (cr *ConsistentHashRing) AddKey(key string) {
 	cr.hashFunction.Reset()
 	cr.hashFunction.Write([]byte(key))
-	h := cr.hashFunction.Sum32()
+	h := cr.hashFunction.Sum64()
 	k := Key{
 		key:       key,
 		hashedKey: h,
@@ -65,7 +65,7 @@ func (cr *ConsistentHashRing) AddKey(key string) {
 	server.contents = append(server.contents, k)
 }
 
-func (cr *ConsistentHashRing) findNode(hash uint32, left bool, exact bool) *Node {
+func (cr *ConsistentHashRing) findNode(hash uint64, left bool, exact bool) *Node {
 	// left biased binsearch but just search through bstnode interface
 	// find the node that is closest to the hash value
 
