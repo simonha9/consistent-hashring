@@ -1,6 +1,9 @@
 package pkg
 
-import "fmt"
+import (
+	"fmt"
+	"hash"
+)
 
 // Consistent hash ring has keys and servers, you hash the node
 // then store keys on the servers.
@@ -9,13 +12,14 @@ import "fmt"
 
 // ConsistentHashRing is a struct that holds the state of the consistent hash ring
 type ConsistentHashRing struct {
-	hashFunction func(string) uint32
+	hashFunction hash.Hash32
 	Nodes        *BSTNode
 	Keys         *BSTNode
 }
 
 // NewConsistentHashRing creates a new ConsistentHashRing
-func NewConsistentHashRing(hash func(string) uint32, keys []uint32) *ConsistentHashRing {
+func NewConsistentHashRing(hash hash.Hash32, keys []uint32) *ConsistentHashRing {
+	hash.Reset()
 	cr := &ConsistentHashRing{
 		hashFunction: hash,
 		Nodes:        NewBSTNode(&Node{"", 0, nil, Server{"serverroot"}}),
@@ -27,7 +31,8 @@ func NewConsistentHashRing(hash func(string) uint32, keys []uint32) *ConsistentH
 	bKeys := []*Key{}
 
 	for _, key := range keys {
-		h := hash(fmt.Sprintf("%d", key))
+		hash.Write([]byte(fmt.Sprintf("%d", key)))
+		h := hash.Sum32()
 
 		k := &Key{
 			key:       fmt.Sprintf("%d", key),
@@ -47,7 +52,9 @@ func NewConsistentHashRing(hash func(string) uint32, keys []uint32) *ConsistentH
 
 // AddNode adds a node to the consistent hash ring
 func (cr *ConsistentHashRing) AddKey(key string) {
-	h := cr.hashFunction(key)
+	cr.hashFunction.Reset()
+	cr.hashFunction.Write([]byte(key))
+	h := cr.hashFunction.Sum32()
 	k := Key{
 		key:       key,
 		hashedKey: h,
