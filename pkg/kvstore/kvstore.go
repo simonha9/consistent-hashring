@@ -1,7 +1,7 @@
 package kvstore
 
 import (
-
+	"github.com/segmentio/fasthash/fnv1a"
 	"github.com/simonha9/consistent-hashring/pkg"
 )
 
@@ -14,7 +14,7 @@ type KVStore struct {
 
 // NewKVStore creates a new KVStore, this needs to be uint32 not byte
 func NewKVStore() *KVStore {
-	
+
 	return &KVStore{
 		HashRing: pkg.NewConsistentHashRing(, []uint32{}),
 	}
