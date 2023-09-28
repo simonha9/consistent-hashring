@@ -128,6 +128,16 @@ func (cr *ConsistentHashRing) RemoveServer(node *Node) {
 	cr.Nodes.Delete(node.HashedKey)
 }
 
+func (cr *ConsistentHashRing) FindServer(key string) *Node {
+	// find the server that holds the key
+	// hash the key and find the closest server
+	cr.hashFunction.Reset()
+	cr.hashFunction.Write([]byte(key))
+	h := cr.hashFunction.Sum64()
+
+	return cr.findNode(h, false, false)
+}
+
 /*
 But theres no guarantee that the keys are evenly distributed
 So we need to add virtual nodes to the hash ring, TODO: implement virtual nodes

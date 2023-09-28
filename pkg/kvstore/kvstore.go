@@ -43,7 +43,18 @@ func NewKVStore() *KVStore {
 }
 
 func (kv *KVStore) Get(key string) (string, error) {
-	return "", nil
+	node := kv.HashRing.FindServer(key)
+
+	if node == nil {
+		return "", nil
+	}
+
+	value, err := node.GetKey(key)
+	if err != nil {
+		return "", err
+	}
+
+	return value, nil
 }
 
 func (kv *KVStore) Set(key string, value string) error {
