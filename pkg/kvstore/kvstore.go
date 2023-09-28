@@ -25,13 +25,13 @@ func NewKVStore() *KVStore {
 			Key:          "server1",
 			HashedKey:    0,
 			Contents:     []pkg.Key{},
-			ParentServer: pkg.Server{"server1"},
+			ParentServer: pkg.Server{ServerName: "server1"},
 		},
 		{
 			Key:          "server2",
 			HashedKey:    0,
 			Contents:     []pkg.Key{},
-			ParentServer: pkg.Server{"server2"},
+			ParentServer: pkg.Server{ServerName: "server2"},
 		},
 	}
 
