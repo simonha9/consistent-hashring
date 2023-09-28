@@ -1,7 +1,8 @@
 package kvstore
 
 import (
-	"github.com/segmentio/fasthash/fnv1a"
+	"hash/fnv"
+
 	"github.com/simonha9/consistent-hashring/pkg"
 )
 
@@ -15,7 +16,37 @@ type KVStore struct {
 // NewKVStore creates a new KVStore, this needs to be uint32 not byte
 func NewKVStore() *KVStore {
 
-	return &KVStore{
-		HashRing: pkg.NewConsistentHashRing(, []uint32{}),
+	k := &KVStore{
+		HashRing: pkg.NewConsistentHashRing(fnv.New64(), []uint32{}),
 	}
+
+	nodes := []*pkg.Node{
+		{
+			Key:          "server1",
+			HashedKey:    0,
+			Contents:     []pkg.Key{},
+			ParentServer: pkg.Server{"server1"},
+		},
+		{
+			Key:          "server2",
+			HashedKey:    0,
+			Contents:     []pkg.Key{},
+			ParentServer: pkg.Server{"server2"},
+		},
+	}
+
+	for _, node := range nodes {
+		k.HashRing.AddServer(node)
+	}
+
+	return k
+}
+
+func (kv *KVStore) Get(key string) (string, error) {
+	return "", nil
+}
+
+func (kv *KVStore) Set(key string, value string) error {
+	// hash the key and value onto the hashring
+	return kv.HashRing.AddKey(key)
 }

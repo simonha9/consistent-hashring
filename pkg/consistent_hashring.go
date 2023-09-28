@@ -39,9 +39,9 @@ func NewConsistentHashRing(hash hash.Hash64, keys []uint32) *ConsistentHashRing 
 			hashedKey: h,
 		}
 		n := &Node{
-			key:       fmt.Sprintf("%d", key),
-			hashedKey: h,
-			contents:  []Key{*k},
+			Key:       fmt.Sprintf("%d", key),
+			HashedKey: h,
+			Contents:  []Key{*k},
 		}
 
 		nodes = append(nodes, n)
@@ -51,7 +51,7 @@ func NewConsistentHashRing(hash hash.Hash64, keys []uint32) *ConsistentHashRing 
 }
 
 // AddNode adds a node to the consistent hash ring
-func (cr *ConsistentHashRing) AddKey(key string) {
+func (cr *ConsistentHashRing) AddKey(key string) error {
 	cr.hashFunction.Reset()
 	cr.hashFunction.Write([]byte(key))
 	h := cr.hashFunction.Sum64()
@@ -62,7 +62,12 @@ func (cr *ConsistentHashRing) AddKey(key string) {
 
 	// find the server that is closest to the value should be right biased
 	server := cr.findNode(h, false, false)
-	server.contents = append(server.contents, k)
+	if server == nil {
+		return fmt.Errorf("server not found")
+	}
+
+	server.Contents = append(server.Contents, k)
+	return nil
 }
 
 func (cr *ConsistentHashRing) findNode(hash uint64, left bool, exact bool) *Node {
@@ -88,22 +93,22 @@ func (cr *ConsistentHashRing) AddServer(node *Node) {
 	// but we actually do this by finding the smallest key > cur node, then all keys in newnode-1 server
 	// with values < target will get redistributed
 
-	leftSibling := cr.findNode(node.hashedKey, true, false)
-	nextLargestKey := cr.findNode(node.hashedKey, false, false)
+	leftSibling := cr.findNode(node.HashedKey, true, false)
+	nextLargestKey := cr.findNode(node.HashedKey, false, false)
 
 	remove := []Key{}
 	keep := []Key{}
 
-	for _, key := range leftSibling.contents {
-		if key.hashedKey < nextLargestKey.hashedKey {
+	for _, key := range leftSibling.Contents {
+		if key.hashedKey < nextLargestKey.HashedKey {
 			remove = append(remove, key)
 		} else {
 			keep = append(keep, key)
 		}
 	}
 
-	copy(leftSibling.contents, keep)
-	copy(node.contents, remove)
+	copy(leftSibling.Contents, keep)
+	copy(node.Contents, remove)
 	cr.addServer(node)
 }
 
@@ -118,9 +123,9 @@ func (cr *ConsistentHashRing) RemoveServer(node *Node) {
 	// find all the keys between this node and last one
 	// all the keys here need to be redistributed to the next sibling
 
-	rightSibling := cr.findNode(node.hashedKey, false, false)
-	copy(rightSibling.contents, append(rightSibling.contents, node.contents...))
-	cr.Nodes.Delete(node.hashedKey)
+	rightSibling := cr.findNode(node.HashedKey, false, false)
+	copy(rightSibling.Contents, append(rightSibling.Contents, node.Contents...))
+	cr.Nodes.Delete(node.HashedKey)
 }
 
 /*

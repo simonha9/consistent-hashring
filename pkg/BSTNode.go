@@ -18,7 +18,7 @@ func NewBSTNode(node *Node) *BSTNode {
 
 // Insert inserts a node into the BST
 func (bst *BSTNode) Insert(node *Node) {
-	if node.hashedKey < bst.Node.hashedKey {
+	if node.HashedKey < bst.Node.HashedKey {
 		if bst.Left == nil {
 			bst.Left = NewBSTNode(node)
 		} else {
@@ -38,10 +38,10 @@ func (bst *BSTNode) Search(hash uint64) *BSTNode {
 	if bst == nil {
 		return nil
 	}
-	if hash == bst.Node.hashedKey {
+	if hash == bst.Node.HashedKey {
 		return bst
 	}
-	if hash < bst.Node.hashedKey {
+	if hash < bst.Node.HashedKey {
 		return bst.Left.Search(hash)
 	}
 	return bst.Right.Search(hash)
@@ -52,10 +52,10 @@ func (bst *BSTNode) Search(hash uint64) *BSTNode {
 func (bst *BSTNode) SearchLeftBiased(hash uint64, exact bool) *Node {
 	closest := bst.Node
 	for bst != nil {
-		if exact && hash == bst.Node.hashedKey {
+		if exact && hash == bst.Node.HashedKey {
 			return bst.Node
 		}
-		if hash < bst.Node.hashedKey {
+		if hash < bst.Node.HashedKey {
 			bst = bst.Left
 		} else {
 			closest = bst.Node
@@ -68,10 +68,10 @@ func (bst *BSTNode) SearchLeftBiased(hash uint64, exact bool) *Node {
 func (bst *BSTNode) SearchRightBiased(hash uint64, exact bool) *Node {
 	closest := bst.Node
 	for bst != nil {
-		if exact && hash == bst.Node.hashedKey {
+		if exact && hash == bst.Node.HashedKey {
 			return bst.Node
 		}
-		if hash < bst.Node.hashedKey {
+		if hash < bst.Node.HashedKey {
 			closest = bst.Node
 			bst = bst.Left
 		} else {
@@ -92,10 +92,10 @@ func (bst *BSTNode) Delete(hash uint64) *Node {
 
 	parent := bst
 
-	for bst.Node.hashedKey != hash {
-		if hash == bst.Node.hashedKey {
+	for bst.Node.HashedKey != hash {
+		if hash == bst.Node.HashedKey {
 			break
-		} else if hash < bst.Node.hashedKey {
+		} else if hash < bst.Node.HashedKey {
 			bst = bst.Left
 		} else {
 			bst = bst.Right

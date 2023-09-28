@@ -15,7 +15,7 @@ func partition(arr []Node, low int, high int) int {
 	i := low - 1
 
 	for j := low; j < high; j++ {
-		if arr[j].hashedKey < pivot.hashedKey {
+		if arr[j].HashedKey < pivot.HashedKey {
 			i++
 
 			arr[i], arr[j] = arr[j], arr[i]
